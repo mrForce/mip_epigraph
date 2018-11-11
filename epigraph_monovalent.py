@@ -2,7 +2,7 @@ import collections
 import argparse
 from Bio import SeqIO
 from pyscipopt import Model, quicksum, quickprod
-
+from Bio.Alphabet.IUPAC import IUPACProtein
 
 
 """
@@ -15,7 +15,7 @@ def cut_proteins(protein_location, k):
     epitopes = collections.Counter()
     with open(protein_location, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
-            protein = str(record.seq)
+            protein = ''.join(list(filter(lambda x: x in IUPACProtein.letters, str(record.seq))))
             for i in range(0, len(protein) - k + 1):
                 epitope = protein[i:(i + k)]
                 epitopes[epitope] += 1
@@ -74,7 +74,6 @@ def solve(epitopes):
     assert(starting_vertex)
     path = [starting_vertex]
     while True:
-        print(starting_vertex)
         edges = outgoing_edges[starting_vertex]
         variable = None
         next_vertex = None
@@ -83,8 +82,6 @@ def solve(epitopes):
                 variable = var
                 next_vertex = seq
                 break
-        print('variable')
-        print(variable)
         
         if next_vertex:
             path.append(next_vertex)
@@ -92,8 +89,6 @@ def solve(epitopes):
         else:
             print('breaking')
             break
-    print('path')
-    print(path)
     assert(len(path) == len(set(path)))
     synthetic = path[0] + ''.join(x[-1] for x in path[1::])
     
